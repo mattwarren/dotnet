@@ -9,6 +9,7 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.EntityFramework6;
 using StackExchange.Profiling.Mvc;
 using StackExchange.Profiling.Storage;
+using StatsdClient;
 
 namespace SampleWeb
 {
@@ -68,6 +69,15 @@ namespace SampleWeb
             }
 
             MiniProfilerEF6.Initialize();
+
+            var metricsConfig = new MetricsConfig
+            {
+                StatsdServerName = "localhost",
+                StatsdServerPort = 8125,
+                Prefix = "MiniProfiler"
+            };
+
+            Metrics.Configure(metricsConfig);
         }
 
         /// <summary>
@@ -119,7 +129,8 @@ namespace SampleWeb
             // Setting up a MultiStorage provider. This will store results in the HttpRuntimeCache (normally the default) and in SqlLite as well.
             MultiStorageProvider multiStorage = new MultiStorageProvider(
                 new HttpRuntimeCacheStorage(new TimeSpan(1, 0, 0)),
-                new SqliteMiniProfilerStorage(ConnectionString));
+                new SqliteMiniProfilerStorage(ConnectionString),
+                new GraphiteStorage());
             MiniProfiler.Settings.Storage = multiStorage;
 
             // different RDBMS have different ways of declaring sql parameters - SQLite can understand inline sql parameters just fine
